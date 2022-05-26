@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "373366119096",
+    "project_id": "persona-smart-glasses",
+    "storage_bucket": "persona-smart-glasses.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:373366119096:android:0193bdc8a05aeb1406724d",
+        "android_client_info": {
+          "package_name": "com.persona.persona"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "373366119096-o485ctar7o002r7soauhao38h87p0b54.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.persona.persona",
+            "certificate_hash": "b5550e66f543334e5ff0e8603ec1ee144a6dc9af"
+          }
+        },
+        {
+          "client_id": "373366119096-bd8po3c2n9mcpr0ufndvuakkmk9sk3dj.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAIoDLC_tByiykjTCx1EcjuJsAon0j5tQI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "373366119096-bd8po3c2n9mcpr0ufndvuakkmk9sk3dj.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
