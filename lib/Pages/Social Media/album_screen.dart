@@ -45,6 +45,7 @@ class _AlbumScreenState extends State<AlbumScreen> {
                         setState(() {
                         GalleryModel galleryModel=GalleryModel(image: Provider.of<HomeHelper>(context,listen: false).uploadPostImage.path);
                         Provider.of<HomeHelper>(context,listen: false).addImages(galleryModel);
+
                         });
                     });
                     }
