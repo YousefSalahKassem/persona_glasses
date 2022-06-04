@@ -1,6 +1,8 @@
 import 'dart:convert';
 
 import 'package:avatar_glow/avatar_glow.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:persona/Pages/Persona/persona_helper.dart';
@@ -11,9 +13,7 @@ import 'package:responsive_sizer/responsive_sizer.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class MemorizeScreen extends StatefulWidget {
-  final BluetoothDevice server;
-
-  const MemorizeScreen({Key? key,required this.server}) : super(key: key);
+  const MemorizeScreen({Key? key}) : super(key: key);
 
   @override
   _MemorizeScreenState createState() => _MemorizeScreenState();
@@ -31,43 +31,14 @@ class _MemorizeScreenState extends State<MemorizeScreen> {
   ConstantColors constantColors=ConstantColors();
   late stt.SpeechToText _speech;
   late  bool _isListening = false;
-  String _text = 'Press the button and start speaking';
+  String? _text;
   double _confidence = 1.0;
-  static final clientID = 0;
-  var connection; //BluetoothConnection
-  List<_Message> messages = [];
-  final ScrollController listScrollController =  ScrollController();
-  bool isConnecting = true;
-  bool isDisconnecting = false;
 
   @override
   void initState() {
     super.initState();
     _speech = stt.SpeechToText();
-    BluetoothConnection.toAddress(widget.server.address).then((_connection) {
-      print('Connected to the device');
-      connection = _connection;
-      setState(() {
-        isConnecting = false;
-        isDisconnecting = false;
-      });
 
-    }).catchError((error) {
-      print('Cannot connect, exception occured');
-      print(error);
-    });
-  }
-
-  @override
-  void dispose() {
-    // Avoid memory leak (`setState` after dispose) and disconnect
-    if (isConnected()) {
-      isDisconnecting = true;
-      connection.dispose();
-      connection = null;
-    }
-
-    super.dispose();
   }
 
 
@@ -105,8 +76,15 @@ class _MemorizeScreenState extends State<MemorizeScreen> {
                             maxLines: 10,
                             controller: description,
                             style: const TextStyle(color: Colors.white),
+                            textInputAction: TextInputAction.done,
+                            onFieldSubmitted: (String value){
+                              FirebaseFirestore.instance.collection('memorize').doc(FirebaseAuth.instance.currentUser!.uid).set(
+                                  {
+                                    "message":value
+                                  });
+                            },
                             decoration: const InputDecoration(
-                              hintText: 'Description...',
+                              hintText: 'Press the button and start speaking',
                               hintStyle: TextStyle(
                                 color: Colors.grey,
                               ),
@@ -119,6 +97,7 @@ class _MemorizeScreenState extends State<MemorizeScreen> {
                                   borderSide: BorderSide(color:Colors.transparent)
                               ),
                             ),),
+
                         ),
                       ),
                     ],
@@ -127,20 +106,7 @@ class _MemorizeScreenState extends State<MemorizeScreen> {
               ),
             ),
             SizedBox(height: Adaptive.h(5),),
-            Padding(
-              padding: const EdgeInsets.only(top: 20.0),
-              child: Align(alignment: Alignment.topCenter,child: InkWell(
-                onTap: (){
-                  _sendMessage("Memorize#"+description.text+"#");
-                },
-                child: Container(
-                  height: 40,
-                  width: 150,
-                  decoration:  BoxDecoration(borderRadius: const BorderRadius.all(Radius.circular(20)),color: constantColors.secondary,),
-                  child: Center(child: Text("Send",style: TextStyle(fontSize: Adaptive.sp(18),fontWeight: FontWeight.bold,color: Colors.white),)),
-                ),
-              ),),
-            ),
+            Provider.of<PersonaHelper>(context,listen: false).send(context, description.text)
           ],
         ),
       ),
@@ -181,36 +147,6 @@ class _MemorizeScreenState extends State<MemorizeScreen> {
       setState(() => _isListening = false);
       _speech.stop();
     }
-  }
-
-  void _sendMessage(String text) async {
-    text = text.trim();
-
-
-    if (text.length > 0) {
-      try {
-        connection.output.add(utf8.encode(text + "\r\n"));
-        await connection.output.allSent;
-
-        setState(() {
-          messages.add(_Message(clientID, text));
-        });
-
-        Future.delayed(const Duration(milliseconds: 333)).then((_) {
-          listScrollController.animateTo(
-              listScrollController.position.maxScrollExtent,
-              duration: const Duration(milliseconds: 333),
-              curve: Curves.easeOut);
-        });
-      } catch (e) {
-        // Ignore error, but notify state
-        setState(() {});
-      }
-    }
-  }
-
-  bool isConnected() {
-    return connection != null && connection.isConnected;
   }
 
 }

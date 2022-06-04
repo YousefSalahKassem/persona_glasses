@@ -16,7 +16,6 @@ import 'package:persona/Utils/post_options.dart';
 import 'package:persona/Utils/upload_post.dart';
 import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
-
 import 'Pages/SplashScreen/splash_screen.dart';
 import 'Services/authentication.dart';
 import 'Services/firebase_operations.dart';
@@ -71,7 +70,6 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return  MultiProvider(
-
       providers: [
         ChangeNotifierProvider(create: (_)=>Authentication()),
         ChangeNotifierProvider(create: (_)=>FirebaseOperations()),
@@ -86,7 +84,6 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider(create: (_)=>UploadPost()),
         ChangeNotifierProvider(create: (_)=>HomeHelper()),
       ],
-
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
         title: 'Flutter Demo',

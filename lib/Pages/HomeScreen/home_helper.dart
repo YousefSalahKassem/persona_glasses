@@ -1,5 +1,8 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:persona/Model/gallery_model.dart';
 import 'package:persona/Services/gallery_database.dart';
 import 'dart:io';
@@ -41,6 +44,8 @@ Future pickUploadPostImage(BuildContext context,ImageSource source)async{
 
   notifyListeners();
 }
+
+
 
 
 }

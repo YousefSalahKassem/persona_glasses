@@ -1,9 +1,11 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:lottie/lottie.dart';
 import 'package:persona/Constants/constants_color.dart';
 import 'package:persona/Model/category_model.dart';
+import 'package:persona/Pages/Persona/face_recognition.dart';
 import 'package:persona/Pages/Persona/memorize_screen.dart';
 import 'package:persona/Pages/Persona/recongition_screen.dart';
 import 'package:persona/Pages/Persona/stt_screen.dart';
@@ -17,6 +19,8 @@ class PersonaHelper with ChangeNotifier{
   final translator = GoogleTranslator();
   ConstantColors constantColors=ConstantColors();
   String output='';
+  TextEditingController nameController=TextEditingController();
+
 
   Widget information(BuildContext context,String title){
     return  Wrap(
@@ -46,59 +50,54 @@ class PersonaHelper with ChangeNotifier{
     double height=MediaQuery.of(context).size.height;
     double width=MediaQuery.of(context).size.width;
     
-    return Padding(
+    return Container(
+      height: height*.65,
       padding: const EdgeInsets.all(8.0),
-      child: SizedBox(
-        height: height*.6,
-        width: width,
-        child: GridView.count(
-          crossAxisCount: 2,
-          crossAxisSpacing: 4,
-          mainAxisSpacing: 8,
-          children: List.generate(categories.length, (index) {
-            return InkWell(
-              onTap: () async {
-                if(categories[index].name=="Memorize"){
-                  final BluetoothDevice selectedDevice = await Navigator.of(context).push(MaterialPageRoute(
+      child: GridView.count(
+        crossAxisCount: 2,
+        crossAxisSpacing: 4,
+        mainAxisSpacing: 8,
+        children: List.generate(categories.length, (index) {
+          return InkWell(
+            onTap: () async {
+              if(categories[index].name=="Memorize"){
+                Navigator.of(context).push(
+                  MaterialPageRoute(
                     builder: (context) {
-                      return const DiscoveryPage();
+                      return const MemorizeScreen();
                     },
-                  ),);
-                  if (selectedDevice != null) {
-                    print('Discovery -> selected ' + selectedDevice.address);
-                    _memorize(context, selectedDevice);
-                  }
-                  else {
-                    print('Discovery -> no device selected');
-                  }
-                }
-                else if(categories[index].name=="Text Recognition"){
-                  Navigator.push(context, MaterialPageRoute(builder: (context)=>const RecognitionScreen()));
-                }
-                else if(categories[index].name=="Text To Speech"){
-                  Navigator.push(context, MaterialPageRoute(builder: (context)=>const TTSScreen()));
-                }
-                else{
-                  Navigator.push(context, MaterialPageRoute(builder: (context)=>const STTScreen()));
-                }
-              },
-              child: Center(
-                child: Card(
-                  color: constantColors.blueGreyColor,
-                  child: Center(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        Image.asset(categories[index].image,height: height*.2, width: width*.3,),
-                        Text(categories[index].name,style: const TextStyle(color: Colors.white,fontSize: 18,fontWeight: FontWeight.bold),)
-                      ],
-                    ),
+                  ),
+                );
+              }
+              else if(categories[index].name=="Text Recognition"){
+                Navigator.push(context, MaterialPageRoute(builder: (context)=>const RecognitionScreen()));
+              }
+              else if(categories[index].name=="Text To Speech"){
+                Navigator.push(context, MaterialPageRoute(builder: (context)=>const TTSScreen()));
+              }
+              else if(categories[index].name=='Face Recognition'){
+                Navigator.push(context, MaterialPageRoute(builder: (context)=>const FaceRecognition()));
+              }
+              else{
+                Navigator.push(context, MaterialPageRoute(builder: (context)=>const STTScreen()));
+              }
+            },
+            child: Center(
+              child: Card(
+                color: constantColors.blueGreyColor,
+                child: Center(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Image.asset(categories[index].image,height: height*.2, width: width*.3,),
+                      Text(categories[index].name,style: const TextStyle(color: Colors.white,fontSize: 18,fontWeight: FontWeight.bold),)
+                    ],
                   ),
                 ),
               ),
-            );
-          }),
-        )
+            ),
+          );
+        }),
       ),
     );
   }
@@ -150,11 +149,15 @@ class PersonaHelper with ChangeNotifier{
     );
   }
 
-  Widget send(BuildContext context){
+  Widget send(BuildContext context,String text){
     return Padding(
       padding: const EdgeInsets.only(top: 20.0),
       child: Align(alignment: Alignment.topCenter,child: InkWell(
         onTap: (){
+          FirebaseFirestore.instance.collection('memorize').doc(FirebaseAuth.instance.currentUser!.uid).set(
+              {
+                "message":text
+              });
         },
         child: Container(
           height: 40,
@@ -207,13 +210,75 @@ class PersonaHelper with ChangeNotifier{
     return output;
   }
 
-  void _memorize(BuildContext context, BluetoothDevice server) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) {
-          return MemorizeScreen(server: server);
-        },
+  Widget request(BuildContext context){
+    return Column(
+      children: [
+        Container(
+          height: MediaQuery.of(context).size.height*.3,
+          width: MediaQuery.of(context).size.width*.6,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(15),
+            image: const DecorationImage(image: NetworkImage('https://firebasestorage.googleapis.com/v0/b/persona-smart-glasses.appspot.com/o/90176576_3438753076142125_7490368800391430144_n.jpg?alt=media&token=5b1f4144-3a29-40bf-926d-992c568d30ac'),fit: BoxFit.cover)
+          ),
+        ),
+        SizedBox(height: MediaQuery.of(context).size.height*.08,),
+        name(context),
+        SizedBox(height: MediaQuery.of(context).size.height*.08,),
+        Container(
+          height: MediaQuery.of(context).size.height*.07,
+          width: MediaQuery.of(context).size.width*.5,
+          decoration: BoxDecoration(
+            color: constantColors.secondary,
+            borderRadius: const BorderRadius.all(Radius.circular(10)),
+          ),
+          child: Center(child: Text("Send",style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: Adaptive.sp(22)),)),
+        )
+      ],
+    );
+  }
+
+  Widget name(BuildContext context){
+    return  Padding(
+      padding: const EdgeInsets.only(left: 20.0,right: 20.0),
+      child: Container(
+        width:Adaptive.w(MediaQuery.of(context).size.width*5),
+        height: Adaptive.h(7),
+        decoration: BoxDecoration(
+            borderRadius: const BorderRadius.all(Radius.circular(10)),
+            border: Border.all(color: constantColors.primary)
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            SizedBox(
+              height: 60,
+              width: MediaQuery.of(context).size.width*.6,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 1.0,right: 1.0),
+                child: TextFormField(
+                  controller: nameController,
+                  style: const TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: 14),
+                  decoration: const InputDecoration(
+                    hintText: 'Username',
+                    hintStyle: TextStyle(
+                      color: Colors.grey,
+                    ),
+                    fillColor: Colors.black,
+                    enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(color:Colors.transparent)
+                    ),
+                    focusedBorder:
+                    UnderlineInputBorder(
+                        borderSide: BorderSide(color:Colors.transparent)
+                    ),
+                  ),),
+              ),
+            ),
+            Icon(Icons.person,color: constantColors.secondary,),
+          ],
+        ),
       ),
     );
   }
+
 }

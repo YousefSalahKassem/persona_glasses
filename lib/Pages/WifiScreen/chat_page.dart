@@ -1,37 +1,35 @@
+import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:fluttertoast/fluttertoast.dart';
-import 'package:persona/Constants/constants_color.dart';
+import 'package:network_info_plus/network_info_plus.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
+
+import '../../Constants/constants_color.dart';
 
 class ChatPage extends StatefulWidget {
   final BluetoothDevice server;
-
+  final String wifi;
   // ignore: use_key_in_widget_constructors
-  const ChatPage({required this.server});
+  const ChatPage({required this.server,required this.wifi});
 
   @override
   _ChatPage createState() =>  _ChatPage();
 }
 
-class _Message {
-  int whom;
-  String text;
-
-  _Message(this.whom, this.text);
-}
-
 class _ChatPage extends State<ChatPage> {
   static final clientID = 0;
+  String _messageBuffer = '';
   var connection; //BluetoothConnection
-  List<_Message> messages = [];
-  final TextEditingController name = TextEditingController();
   final TextEditingController password = TextEditingController();
   final ScrollController listScrollController =  ScrollController();
   ConstantColors constantColors=ConstantColors();
   bool isConnecting = true;
   bool isDisconnecting = false;
+  final info = NetworkInfo();
 
   @override
   void initState() {
@@ -44,11 +42,22 @@ class _ChatPage extends State<ChatPage> {
         isConnecting = false;
         isDisconnecting = false;
       });
-
+      connection.input.listen(_onDataReceived).onDone(() {
+        if (isDisconnecting) {
+          print('Disconnecting locally!');
+        } else {
+          print('Disconnected remotely!');
+        }
+        if (this.mounted) {
+          setState(() {});
+        }
+      });
     }).catchError((error) {
       print('Cannot connect, exception occured');
       print(error);
     });
+
+
   }
 
   @override
@@ -63,8 +72,12 @@ class _ChatPage extends State<ChatPage> {
     super.dispose();
   }
 
+
+
   @override
   Widget build(BuildContext context) {
+    final TextEditingController name = TextEditingController(text: widget.wifi.toString());
+
     return Scaffold(
       backgroundColor: constantColors.background,
       appBar: AppBar(
@@ -163,9 +176,7 @@ class _ChatPage extends State<ChatPage> {
             const SizedBox(height: 20,),
             InkWell(
               onTap: (){
-                _sendMessage("Init#"+name.text+"#"+password.text+"##");
-                Fluttertoast.showToast(msg: "Wifi Connecting",gravity: ToastGravity.BOTTOM,textColor: Colors.white,backgroundColor: constantColors.secondary);
-                Navigator.pop(context);
+                _sendMessage(name.text+"#"+password.text+"#"+FirebaseAuth.instance.currentUser!.uid+"#");
               },
               child: Container(
                 height: MediaQuery.of(context).size.height*.07,
@@ -183,27 +194,59 @@ class _ChatPage extends State<ChatPage> {
     );
   }
 
+  void _onDataReceived(Uint8List data) {
+    // Allocate buffer for parsed data
+    int backspacesCounter = 0;
+    data.forEach((byte) {
+      if (byte == 8 || byte == 127) {
+        backspacesCounter++;
+      }
+    });
+    Uint8List buffer = Uint8List(data.length - backspacesCounter);
+    int bufferIndex = buffer.length;
+
+    // Apply backspace control character
+    backspacesCounter = 0;
+    for (int i = data.length - 1; i >= 0; i--) {
+      if (data[i] == 8 || data[i] == 127) {
+        backspacesCounter++;
+      } else {
+        if (backspacesCounter > 0) {
+          backspacesCounter--;
+        } else {
+          buffer[--bufferIndex] = data[i];
+        }
+      }
+    }
+
+    // Create message if there is new line character
+    String dataString = String.fromCharCodes(buffer);
+    int index = buffer.indexOf(13);
+    if (~index != 0) {
+      setState(() {
+        _messageBuffer = dataString.substring(index);
+        _messageBuffer=="connected"?Navigator.pop(context):null;
+      });
+    } else {
+      _messageBuffer = (backspacesCounter > 0
+          ? _messageBuffer.substring(
+          0, _messageBuffer.length - backspacesCounter)
+          : _messageBuffer + dataString);
+      _messageBuffer=="connected"?Navigator.pop(context):null;
+    }
+  }
 
   void _sendMessage(String text) async {
     text = text.trim();
-    name.clear();
     password.clear();
 
     if (text.length > 0) {
       try {
-        connection.output.add(utf8.encode(text + "\r\n"));
+        connection.output.add(utf8.encode(text));
         await connection.output.allSent;
-
-        setState(() {
-          messages.add(_Message(clientID, text));
-        });
-
-        Future.delayed(const Duration(milliseconds: 333)).then((_) {
-          listScrollController.animateTo(
-              listScrollController.position.maxScrollExtent,
-              duration: const Duration(milliseconds: 333),
-              curve: Curves.easeOut);
-        });
+        Fluttertoast.showToast(msg: "Wifi Connecting",gravity: ToastGravity.BOTTOM,textColor: Colors.white,backgroundColor: constantColors.secondary);
+        // Navigator.pop(context);
+        print(text);
       } catch (e) {
         // Ignore error, but notify state
         setState(() {});

@@ -1,20 +1,24 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
+import 'package:network_info_plus/network_info_plus.dart';
 import 'package:persona/Constants/constants_color.dart';
-
+import 'package:provider/provider.dart';
 import 'chat_page.dart';
 import 'discovery_page.dart';
 
-class MainPage extends StatefulWidget {
-  const MainPage({Key? key}) : super(key: key);
 
+
+class MainPage extends StatefulWidget {
   @override
-  _MainPage createState() =>  _MainPage();
+  _MainPage createState() => new _MainPage();
 }
 
 class _MainPage extends State<MainPage> {
-  BluetoothState _bluetoothState = BluetoothState.UNKNOWN;
   ConstantColors constantColors=ConstantColors();
+  BluetoothState _bluetoothState = BluetoothState.UNKNOWN;
+  final info = NetworkInfo();
   String _address = "...";
   String _name = "...";
 
@@ -31,10 +35,10 @@ class _MainPage extends State<MainPage> {
 
     Future.doWhile(() async {
       // Wait if adapter not enabled
-      if ( await FlutterBluetoothSerial.instance.isEnabled==true) {
+      if (await FlutterBluetoothSerial.instance.isEnabled==true) {
         return false;
       }
-      await Future.delayed(const Duration(milliseconds: 0xDD));
+      await Future.delayed(Duration(milliseconds: 0xDD));
       return true;
     }).then((_) {
       // Update the address field
@@ -72,83 +76,87 @@ class _MainPage extends State<MainPage> {
     return Scaffold(
       backgroundColor: constantColors.background,
       appBar: AppBar(
-        centerTitle: true,
-        backgroundColor: constantColors.secondary,
-        title: const Text('Bluetooth'),
+        title: const Text('Flutter Bluetooth Serial'),
+        backgroundColor: constantColors.primary,
       ),
-      body: ListView(
-        children: <Widget>[
-          const Divider(),
-          const ListTile(title: Text('General',style: TextStyle(color: Colors.white),)),
-          SwitchListTile(
-            title: const Text('Enable Bluetooth',style: TextStyle(color: Colors.white),),
-            value: _bluetoothState.isEnabled,
-            onChanged: (bool value) {
-              // Do the request and update with the true value then
-              future() async {
-                // async lambda seems to not working
-                if (value) {
-                  await FlutterBluetoothSerial.instance.requestEnable();
-                } else {
-                  await FlutterBluetoothSerial.instance.requestDisable();
+      body: Container(
+        child: ListView(
+          children: <Widget>[
+            Divider(),
+            ListTile(title: const Text('General',style: TextStyle(color: Colors.white),)),
+            SwitchListTile(
+              title: const Text('Enable Bluetooth',style: TextStyle(color: Colors.white)),
+              value: _bluetoothState.isEnabled,
+              activeColor: constantColors.primary,
+              onChanged: (bool value) {
+                // Do the request and update with the true value then
+                future() async {
+                  // async lambda seems to not working
+                  if (value)
+                    await FlutterBluetoothSerial.instance.requestEnable();
+                  else
+                    await FlutterBluetoothSerial.instance.requestDisable();
                 }
-              }
 
-              future().then((_) {
-                setState(() {});
-              });
-            },
-          ),
-          ListTile(
-            title: const Text('Bluetooth status',style: TextStyle(color: Colors.white),),
-            subtitle: Text(_bluetoothState.toString(),style: const TextStyle(color: Colors.white),),
-            trailing: RaisedButton(
-              color: constantColors.secondary,
-              child: const Text('Settings',style: TextStyle(color: Colors.white),),
-              onPressed: () {
-                FlutterBluetoothSerial.instance.openSettings();
+                future().then((_) {
+                  setState(() {});
+                });
               },
             ),
-          ),
-          ListTile(
-            title: const Text('Local adapter address',style: TextStyle(color: Colors.white),),
-            subtitle: Text(_address,style:const TextStyle(color: Colors.white),),
-          ),
-          ListTile(
-            title: const Text('Local adapter name',style: TextStyle(color: Colors.white),),
-            subtitle: Text(_name,style: const TextStyle(color: Colors.white),),
-            onLongPress: null,
-          ),
-          const Divider(),
-          ListTile(
-            title: TextButton(
-                child:
-                const Text('Connect to paired device to chat with ESP32',),
-                onPressed: () async {
-                  final BluetoothDevice selectedDevice = await Navigator.of(context).push(MaterialPageRoute(
-                      builder: (context) {
-                        return const DiscoveryPage();
-                      },
-                    ),);
-                  if (selectedDevice != null) {
-                    print('Discovery -> selected ' + selectedDevice.address);
-                    _startChat(context, selectedDevice);
-                  }
-                  else {
-                    print('Discovery -> no device selected');
-                  }
-                }),
-          ),
-        ],
+            ListTile(
+              title: const Text('Bluetooth status',style: TextStyle(color: Colors.white)),
+              subtitle: Text(_bluetoothState.toString(),style: TextStyle(color: Colors.white)),
+              trailing: RaisedButton(
+                child: const Text('Settings'),
+                onPressed: () {
+                  FlutterBluetoothSerial.instance.openSettings();
+                },
+              ),
+            ),
+            ListTile(
+              title: const Text('Local adapter address',style: TextStyle(color: Colors.white)),
+              subtitle: Text(_address,style: TextStyle(color: Colors.white)),
+            ),
+            ListTile(
+              title: const Text('Local adapter name',style: TextStyle(color: Colors.white)),
+              subtitle: Text(_name,style: TextStyle(color: Colors.white)),
+              onLongPress: null,
+            ),
+            Divider(),
+            ListTile(
+              title: TextButton(
+                  child:
+                  Text('Connect to paired device to chat with ESP32',style: TextStyle(color: constantColors.primary)),
+                  onPressed: () async {
+                    final BluetoothDevice selectedDevice =
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) {
+                          return DiscoveryPage();
+                        },
+                      ),
+                    );
+
+                    if (selectedDevice != null) {
+                      print('Discovery -> selected ' + selectedDevice.address);
+                      _startChat(context, selectedDevice);
+                    } else {
+                      print('Discovery -> no device selected');
+                    }
+                  }),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  void _startChat(BuildContext context, BluetoothDevice server) {
+  void _startChat(BuildContext context, BluetoothDevice server) async{
+    var ssid=await info.getWifiName();
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (context) {
-          return ChatPage(server: server);
+          return ChatPage(server: server,wifi:ssid.toString() ,);
         },
       ),
     );

@@ -2,24 +2,24 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 
 class BluetoothDeviceListEntry extends ListTile {
-  BluetoothDeviceListEntry({Key? key,
+  BluetoothDeviceListEntry({
     required BluetoothDevice device,
     required rssi,
     required GestureTapCallback onTap,
     bool enabled = true,
-  }) : super(key: key,
+  }) : super(
     onTap: onTap,
     enabled: enabled,
-    leading: const Icon(Icons.devices,color: Colors.white),
+    leading: const Icon(Icons.devices,color: Colors.white,),
     // @TODO . !BluetoothClass! class aware icon
-    title: Text(device.name ?? "Unknown device",style: const TextStyle(color: Colors.white),),
-    subtitle: Text(device.address.toString(),style:const TextStyle(color: Colors.white),),
+    title: Text(device.name ?? "Unknown device",style: const TextStyle(color: Colors.white)),
+    subtitle: Text(device.address.toString(),style: const TextStyle(color: Colors.white)),
     trailing: Row(
       mainAxisSize: MainAxisSize.min,
       children: <Widget>[
         rssi != null
             ? Container(
-          margin:  const EdgeInsets.all(8.0),
+          margin: new EdgeInsets.all(8.0),
           child: DefaultTextStyle(
             style: _computeTextStyle(rssi),
             child: Column(

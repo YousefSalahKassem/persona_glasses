@@ -3,24 +3,25 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_bluetooth_serial/flutter_bluetooth_serial.dart';
 import 'package:persona/Constants/constants_color.dart';
+import 'package:provider/provider.dart';
 
-import '../WifiScreen/BluetoothDeviceListEntry.dart';
+import './BluetoothDeviceListEntry.dart';
 
 class DiscoveryPage extends StatefulWidget {
   /// If true, discovery starts on page start, otherwise user must press action button.
   final bool start;
 
-   const DiscoveryPage({Key? key, this.start = true}) : super(key: key);
+  const DiscoveryPage({this.start = true});
 
   @override
-  _DiscoveryPage createState() =>  _DiscoveryPage();
+  _DiscoveryPage createState() => new _DiscoveryPage();
 }
 
 class _DiscoveryPage extends State<DiscoveryPage> {
-  ConstantColors constantColors=ConstantColors();
   late StreamSubscription<BluetoothDiscoveryResult> _streamSubscription;
   List<BluetoothDiscoveryResult> results = [];
   late bool isDiscovering;
+  ConstantColors constantColors=ConstantColors();
 
   @override
   void initState() {
@@ -61,7 +62,7 @@ class _DiscoveryPage extends State<DiscoveryPage> {
   @override
   void dispose() {
     // Avoid memory leak (`setState` after dispose) and cancel discovery
-    _streamSubscription.cancel();
+    _streamSubscription?.cancel();
 
     super.dispose();
   }
@@ -71,23 +72,22 @@ class _DiscoveryPage extends State<DiscoveryPage> {
     return Scaffold(
       backgroundColor: constantColors.background,
       appBar: AppBar(
-        backgroundColor: constantColors.secondary,
-        centerTitle: true,
+        backgroundColor: constantColors.primary,
         title: isDiscovering
-            ? const Text('Discovering devices')
-            : const Text('Discovered devices'),
+            ? Text('Discovering devices')
+            : Text('Discovered devices'),
         actions: <Widget>[
           isDiscovering
               ? FittedBox(
             child: Container(
-              margin: const EdgeInsets.all(16.0),
-              child: const CircularProgressIndicator(
+              margin: new EdgeInsets.all(16.0),
+              child: CircularProgressIndicator(
                 valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
               ),
             ),
           )
               : IconButton(
-            icon: const Icon(Icons.replay),
+            icon: Icon(Icons.replay),
             onPressed: _restartDiscovery,
           )
         ],
