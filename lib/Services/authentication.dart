@@ -44,15 +44,4 @@ class Authentication with ChangeNotifier{
 
 
 
-  void signInWithFacebook(BuildContext context)async{
-    try{
-      final LoginResult loginResult=await FacebookAuth.instance.login();
-      final facebookAuthCredential = FacebookAuthProvider.credential(loginResult.accessToken!.token);
-      await FirebaseAuth.instance.signInWithCredential(facebookAuthCredential).whenComplete(() => Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context)=>const MenuScreen() )));
-    }
-    catch(e){
-      print(e.toString());
-    }
-
-  }
 }

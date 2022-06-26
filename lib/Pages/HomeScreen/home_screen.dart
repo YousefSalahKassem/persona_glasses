@@ -40,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
    const Icon(Icons.shopping_cart,size: 30,color: Colors.white,),
    const Icon(FontAwesomeIcons.camera,size: 25,color: Colors.white,),
    const Icon(FontAwesomeIcons.heart,size: 30,color: Colors.white,),
-   CircleAvatar(backgroundImage: CachedNetworkImageProvider(FirebaseAuth.instance.currentUser!.photoURL!),backgroundColor: Colors.transparent,radius: 20,),
+    FirebaseAuth.instance.currentUser!.photoURL!.isEmpty?Container():CircleAvatar(backgroundImage: CachedNetworkImageProvider(FirebaseAuth.instance.currentUser!.photoURL!),backgroundColor: Colors.transparent,radius: 20,),
   ];
 
   @override

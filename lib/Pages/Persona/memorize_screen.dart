@@ -80,7 +80,7 @@ class _MemorizeScreenState extends State<MemorizeScreen> {
                             onFieldSubmitted: (String value){
                               FirebaseFirestore.instance.collection('memorize').doc(FirebaseAuth.instance.currentUser!.uid).set(
                                   {
-                                    "message":value
+                                    "message":value+"#"
                                   });
                             },
                             decoration: const InputDecoration(

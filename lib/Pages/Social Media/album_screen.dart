@@ -68,7 +68,7 @@ class _AlbumScreenState extends State<AlbumScreen> {
                 width: MediaQuery.of(context).size.width,
                 child:
                 StreamBuilder<QuerySnapshot>(
-                    stream: FirebaseFirestore.instance.collection('Gallery').where('uid',isEqualTo: FirebaseAuth.instance.currentUser!.uid).snapshots()
+                    stream: FirebaseFirestore.instance.collection('gallery').where('uid',isEqualTo: FirebaseAuth.instance.currentUser!.uid).snapshots()
                     ,builder: (context,snapshot){
                       if(snapshot.connectionState==ConnectionState.waiting){
                         return const CircularProgressIndicator();
@@ -79,48 +79,24 @@ class _AlbumScreenState extends State<AlbumScreen> {
                         gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 2,),
                         children: snapshot.data!.docs.map((DocumentSnapshot document) => InkWell(
                           onDoubleTap: ()async{
-                                await GallerySaver.saveImage(document['image'],toDcim: true);
+                                await GallerySaver.saveImage(document['url'],toDcim: true);
                               },
                           onLongPress: (){
                             setState(() {
-                              FirebaseFirestore.instance.collection('Gallery').doc(document.id).delete();
+                              FirebaseFirestore.instance.collection('gallery').doc(document.id).delete();
                             });
                           },
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: ClipRRect(
                                 borderRadius: BorderRadius.circular(15),
-                                child:CachedNetworkImage(imageUrl: document["image"],fit: BoxFit.cover,)),
+                                child:CachedNetworkImage(imageUrl: document["url"],fit: BoxFit.cover,)),
                           ),
                         )
                         ).toList(),
                         );
                       }
                 })
-                // FutureBuilder(
-                //   future: Provider.of<HomeHelper>(context,listen: false).getAllImages(),
-                //   builder:(context,controller)=> GridView.builder(
-                //     physics: const NeverScrollableScrollPhysics(),
-                //     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                //       crossAxisCount: 2,
-                //     ),
-                //     itemCount: Provider.of<HomeHelper>(context,listen: false).images.length,
-                //     itemBuilder: (context,index){
-                //       return InkWell(
-                //         onLongPress: (){
-                //           setState(() {
-                //             Provider.of<HomeHelper>(context,listen: false).deleteImage(Provider.of<HomeHelper>(context,listen: false).images[index].image);
-                //           });
-                //         },
-                //         child: Padding(
-                //           padding: const EdgeInsets.all(8.0),
-                //           child: ClipRRect(
-                //               borderRadius: BorderRadius.circular(15),
-                //               child: Image.network(Provider.of<HomeHelper>(context,listen: false).images[index].image,fit: BoxFit.cover,)),
-                //         ),
-                //       );
-                //     },),
-                // )
             )
           ],
         ),

@@ -302,7 +302,6 @@ class LoginSystemHelper with ChangeNotifier{
   Widget Facebook(BuildContext context){
     return InkWell(
       onTap: (){
-        Provider.of<Authentication>(context, listen: false).signInWithFacebook(context);
       },
       child: Padding(
         padding: const EdgeInsets.only(left: 40.0),

@@ -21,12 +21,8 @@ class _TranslateScreenState extends State<TranslateScreen> {
   String output='';
   ConstantColors constantColors=ConstantColors();
   String translate(){
-    translator.translate(widget.result, to: code).then((result) {setState(() {output=result.text;});
-    }
-
-    );
+    translator.translate(widget.result, to: code).then((result) {setState(() {output=result.text;});});
     return output;
-
   }
   @override
   Widget build(BuildContext context) {

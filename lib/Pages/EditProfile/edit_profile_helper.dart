@@ -1,14 +1,18 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:page_transition/page_transition.dart';
 import 'package:persona/Pages/LoginSystem/forgot_password.dart';
+import 'package:provider/provider.dart';
 import 'package:responsive_sizer/responsive_sizer.dart';
 import 'dart:io';
 
 import '../../Constants/constants_color.dart';
+import '../../Services/firebase_operations.dart';
+import '../HomeScreen/menu_screen.dart';
 
 class EditProfileHelper with ChangeNotifier{
   String image = FirebaseAuth.instance.currentUser!.photoURL!;
@@ -238,7 +242,8 @@ class EditProfileHelper with ChangeNotifier{
     );
   }
 
-  Widget address(BuildContext context){
+  Widget address(BuildContext context,String location){
+    addressController=TextEditingController(text: location);
     return  Container(
       width:Adaptive.w(MediaQuery.of(context).size.width*5),
       height: Adaptive.h(7),
@@ -293,6 +298,25 @@ class EditProfileHelper with ChangeNotifier{
         child: Center(child: Text("Reset Password",style: TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: Adaptive.sp(18)),)),
       ),
     );
+  }
+
+  editInfo(BuildContext context){
+    uploadPostImageToFirebase();
+    var user = FirebaseAuth.instance.currentUser!;
+    user.updateProfile(
+        displayName: firstNameController.text.isEmpty||lastNameController.text.isEmpty
+            ?FirebaseAuth.instance.currentUser!.displayName: firstNameController.text+" "+lastNameController.text,
+        photoURL:  getUploadPostImageUrl.isEmpty?FirebaseAuth.instance.currentUser!.photoURL: getUploadPostImageUrl)
+        .whenComplete(() async {
+      FirebaseFirestore.instance.collection('users').doc(FirebaseAuth.instance.currentUser!.uid).update({
+        'useruid': FirebaseAuth.instance.currentUser!.uid,
+        'useremail': FirebaseAuth.instance.currentUser!.email,
+        'username': FirebaseAuth.instance.currentUser!.displayName,
+        'userimage': FirebaseAuth.instance.currentUser!.photoURL,
+        "userphone": phoneController.text,
+        "useraddress": addressController.text,
+      });
+      Navigator.pushReplacement(context, PageTransition(child: const MenuScreen(), type: PageTransitionType.rightToLeft));});
   }
 
 }

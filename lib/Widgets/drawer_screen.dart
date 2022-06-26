@@ -30,11 +30,11 @@ class DrawerScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Padding(
-              padding:  EdgeInsets.only(top:Adaptive.h(1)),
+              padding:  EdgeInsets.only(top:Adaptive.h(3),left: Adaptive.h(2)),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  CircleAvatar(backgroundImage: CachedNetworkImageProvider(FirebaseAuth.instance.currentUser!.photoURL!),backgroundColor: Colors.transparent,radius: 50,),
+                  FirebaseAuth.instance.currentUser!.photoURL!.isEmpty?Container():CircleAvatar(backgroundImage: CachedNetworkImageProvider(FirebaseAuth.instance.currentUser!.photoURL!),backgroundColor: Colors.transparent,radius: 50,),
                   const SizedBox(width: 10,),
                   Text(FirebaseAuth.instance.currentUser!.displayName!,style:  TextStyle(color: Colors.white,fontWeight: FontWeight.bold,fontSize: Adaptive.sp(20)),),
                   Text(FirebaseAuth.instance.currentUser!.email!,style: const TextStyle(color: Colors.grey,fontWeight: FontWeight.bold))

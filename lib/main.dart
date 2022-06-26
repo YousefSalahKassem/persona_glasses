@@ -3,6 +3,7 @@ import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_stripe/flutter_stripe.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:persona/Pages/BuyProduct/product_helper.dart';
 import 'package:persona/Pages/EditProfile/edit_profile_helper.dart';
@@ -24,6 +25,7 @@ import 'Services/notifications.dart';
 Future <void> main()async {
   try {
     WidgetsFlutterBinding.ensureInitialized();
+    Stripe.publishableKey='pk_test_51LAOgiKbfWbA0WIcl1TDU2BVepoHRkA8H3XzkhjXDSZ6A3DLpjAtPtyvtCgItsPsXTIRy7d4gBR18PmsOg1jjWqC0017WGSJvk';
     FirebaseMessaging.onBackgroundMessage(backgroundHandler);
     await Firebase.initializeApp();
     await FirebaseAppCheck.instance.activate();
